@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tolet.click - Smart House Rental Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50"><!-- Signup Form -->
+<form id="signup-form" class="p-4">
+    <input type="text" id="signupName" placeholder="Full Name" class="border p-2 mb-2 w-full" required />
+    <input type="text" id="signupPhone" placeholder="Phone Number" class="border p-2 mb-2 w-full" required />
+    <input type="email" id="signupEmail" placeholder="Email" class="border p-2 mb-2 w-full" required />
+    <input type="password" id="signupPassword" placeholder="Password" class="border p-2 mb-2 w-full" required />
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2">Sign Up</button>
+</form>
+
+<!-- Login Form -->
+<form id="login-form" class="p-4">
+    <input type="email" id="loginEmail" placeholder="Email" class="border p-2 mb-2 w-full" required />
+    <input type="password" id="loginPassword" placeholder="Password" class="border p-2 mb-2 w-full" required />
+    <button type="submit" class="bg-green-500 text-white px-4 py-2">Login</button>
+</form>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="hidden p-4 border mt-4 bg-white">
+    <h2 class="text-xl font-bold mb-2">Profile</h2>
+    <p><strong>Name:</strong> <span id="profileDisplayName"></span></p>
+    <p><strong>Email:</strong> <span id="profileDisplayEmail"></span></p>
+    <p><strong>Phone:</strong> <span id="profileDisplayPhone"></span></p>
+    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 mt-3">Logout</button>
+</div>
+
+<script>
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(
+        "https://octyawwxpdpelvusqfhe.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jdHlhd3d4cGRwZWx2dXNxZmhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NTM3NzQsImV4cCI6MjA3NDIyOTc3NH0.FTAh5drNmQF8yzO6-EUxGv-hCo0mfL14qcxv9an5eAM"
+    );
+
+    // Handle Signup
+    document.getElementById("signup-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("signupEmail").value;
+        const password = document.getElementById("signupPassword").value;
+        const name = document.getElementById("signupName").value;
+        const phone = document.getElementById("signupPhone").value;
+
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: { data: { full_name: name, phone: phone } }
+        });
+
+        if (error) {
+            alert("Signup failed: " + error.message);
+        } else {
+            alert("Signup successful! Check your email to confirm.");
+            e.target.reset();
+        }
+    });
+
+    // Handle Login
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            alert("Login failed: " + error.message);
+        } else {
+            alert("Login successful!");
+            e.target.reset();
+            loadProfile();
+        }
+    });
+
+    // Handle Logout
+    async function logout() {
+        await supabase.auth.signOut();
+        alert("You have been logged out.");
+        document.getElementById("profileModal").classList.add("hidden");
+    }
+
+    // Load Profile Info
+    async function loadProfile() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            document.getElementById("profileDisplayName").innerText = user.user_metadata.full_name || "User";
+            document.getElementById("profileDisplayEmail").innerText = user.email;
+            document.getElementById("profileDisplayPhone").innerText = user.user_metadata.phone || "N/A";
+            document.getElementById("profileModal").classList.remove("hidden");
+        }
+    }
+
+    // Auto load profile if already logged in
+    loadProfile();
+</script>
+
+</body>
+</html>
